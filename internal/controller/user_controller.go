@@ -1,11 +1,13 @@
 package controller
 
 import (
-	"database/sql"
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/leosampsousa/psycoapi/internal/dto"
 	"github.com/leosampsousa/psycoapi/internal/service"
+	errHandler "github.com/leosampsousa/psycoapi/pkg/errors"
 )
 
 
@@ -18,26 +20,32 @@ func NewUserController(us *service.UserService) *UserController {
 }
 
 //TODO: pegar username da requisição
-func (ac *UserController) User(c *gin.Context) {
+func (uc *UserController) GetUser(c *gin.Context) {
 	ctx := c.Request.Context()
-	user, err := ac.us.GetUser(ctx, "leosampsousa")
+	user, err := uc.us.GetUser(ctx, "leosampsousa")
 
 	if err != nil {
-		handleError(c, err)
+		fmt.Println(err)
+		c.IndentedJSON(errHandler.GetHttpStatusFromError(err), gin.H{"message": err.Error()})
 		return
 	}
 	c.IndentedJSON(http.StatusOK, user)
 }
 
-func (ac *UserController) Create(c *gin.Context) {
+func (uc *UserController) Create(c *gin.Context) {
+	ctx := c.Request.Context()
 
-}
-
-//TODO: extrair isso e criar um handle de erros genericos
-func handleError(c *gin.Context, err error) {
-	if err == sql.ErrNoRows {
-		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "Nenhum registro encontrado"})
+	var user dto.CreateUserDTO
+	if errBind := c.BindJSON(&user); errBind != nil {
+		c.IndentedJSON(errHandler.GetHttpStatusFromError(errBind), gin.H{"message": errBind.Error()})
 		return
 	}
-	c.IndentedJSON(http.StatusNotFound, gin.H{"message": "erro interno"})
+
+	err := uc.us.CreateUser(ctx, user)
+
+	if err != nil {
+		c.IndentedJSON(errHandler.GetHttpStatusFromError(err), gin.H{"message": err.Error()})
+		return 
+	}
+	c.Status(http.StatusCreated)
 }

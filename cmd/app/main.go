@@ -15,6 +15,8 @@ func main () {
 	db := db.New(connection)
 	userController := handleUserDependencies(db)
 
+	defer connection.Close()
+
 	appRouter := gin.Default()
 	router.UserRoute(appRouter, userController)
 

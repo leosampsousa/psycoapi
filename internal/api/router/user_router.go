@@ -6,6 +6,6 @@ import (
 )
 
 func UserRoute(router *gin.Engine, uc *controller.UserController) {
-	router.GET("/user", uc.User)
-	router.POST("/auth/create", uc.Create)
+	router.GET("/user", uc.GetUser)
+	router.POST("/user", uc.Create)
 }
