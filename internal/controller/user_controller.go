@@ -1,13 +1,11 @@
 package controller
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/leosampsousa/psycoapi/internal/dto"
 	"github.com/leosampsousa/psycoapi/internal/service"
-	errHandler "github.com/leosampsousa/psycoapi/pkg/errors"
 )
 
 
@@ -25,8 +23,7 @@ func (uc *UserController) GetUser(c *gin.Context) {
 	user, err := uc.us.GetUser(ctx, "leosampsousa")
 
 	if err != nil {
-		fmt.Println(err)
-		c.IndentedJSON(errHandler.GetHttpStatusFromError(err), gin.H{"message": err.Error()})
+		c.IndentedJSON(err.Code, gin.H{"message": err.Message})
 		return
 	}
 	c.IndentedJSON(http.StatusOK, user)
@@ -37,14 +34,14 @@ func (uc *UserController) Create(c *gin.Context) {
 
 	var user dto.CreateUserDTO
 	if errBind := c.BindJSON(&user); errBind != nil {
-		c.IndentedJSON(errHandler.GetHttpStatusFromError(errBind), gin.H{"message": errBind.Error()})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": "Erro ao fazer desserialização do Json"})
 		return
 	}
 
 	err := uc.us.CreateUser(ctx, user)
 
 	if err != nil {
-		c.IndentedJSON(errHandler.GetHttpStatusFromError(err), gin.H{"message": err.Error()})
+		c.IndentedJSON(err.Code, gin.H{"message": err.Message})
 		return 
 	}
 	c.Status(http.StatusCreated)

@@ -6,7 +6,7 @@ import (
 	"github.com/leosampsousa/psycoapi/internal/db"
 	"github.com/leosampsousa/psycoapi/internal/dto"
 	"github.com/leosampsousa/psycoapi/internal/repository"
-	errHandler "github.com/leosampsousa/psycoapi/pkg/errors"
+	error "github.com/leosampsousa/psycoapi/pkg/errors"
 )
 
 type UserService struct {
@@ -17,7 +17,7 @@ func NewUserService(ur *repository.UserRepository) *UserService {
 	return &UserService{userRepo: ur}
 }
 
-func (us *UserService) GetUser(ctx context.Context, username string) (*dto.UserDTO, error) {
+func (us *UserService) GetUser(ctx context.Context, username string) (*dto.UserDTO, *error.Error) {
 	user, err := us.userRepo.GetUser(ctx, username)
 	if (err != nil) {
 		return nil, err
@@ -31,10 +31,10 @@ func (us *UserService) GetUser(ctx context.Context, username string) (*dto.UserD
 	}, nil
 }
 
-func (us *UserService) CreateUser(ctx context.Context, dto dto.CreateUserDTO) error {
+func (us *UserService) CreateUser(ctx context.Context, dto dto.CreateUserDTO) *error.Error {
 
 	if (us.alreadyRegistered(ctx, dto)) {
-		return errHandler.RecursoJaCadastrado
+		return error.NewError(400, "Usuario ja cadastrado")
 	}
 
 	err := us.userRepo.SaveUser(
