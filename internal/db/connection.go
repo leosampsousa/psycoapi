@@ -10,8 +10,8 @@ import (
 var db *sql.DB = nil 
 
 //TODO: criar variaveis de ambiente
-func newDB() *sql.DB {
-	connStr := "postgres://postgres:admin@localhost:5432/psycodb?sslmode=disable"
+func newDB(url string) *sql.DB {
+	connStr := url
     db, err := sql.Open("postgres", connStr)
 
     if err != nil {
@@ -26,11 +26,11 @@ func newDB() *sql.DB {
 	return db
 }
 
-func GetInstance() *sql.DB {
+func GetInstance(url string) *sql.DB {
 	if db != nil {
 		return db
 	}
 
-	db = newDB()
+	db = newDB(url)
 	return db
 }

@@ -19,14 +19,14 @@ func NewUserController(us *service.UserService) *UserController {
 
 //TODO: pegar username da requisição
 func (uc *UserController) GetUser(c *gin.Context) {
-	ctx := c.Request.Context()
-	user, err := uc.us.GetUser(ctx, "leosampsousa")
+	//ctx := c.Request.Context()
+	//user, err := uc.us.GetUser(ctx, "leosampsousa")
 
-	if err != nil {
-		c.IndentedJSON(err.Code, gin.H{"message": err.Message})
-		return
-	}
-	c.IndentedJSON(http.StatusOK, user)
+	//if err != nil {
+	//	c.IndentedJSON(err.Code, gin.H{"message": err.Message})
+	//	return
+	//}
+	//c.IndentedJSON(http.StatusOK, user)
 }
 
 func (uc *UserController) Create(c *gin.Context) {

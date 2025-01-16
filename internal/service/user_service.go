@@ -17,8 +17,8 @@ func NewUserService(ur *repository.UserRepository) *UserService {
 	return &UserService{userRepo: ur}
 }
 
-func (us *UserService) GetUser(ctx context.Context, username string) (*dto.UserDTO, *error.Error) {
-	user, err := us.userRepo.GetUser(ctx, username)
+func (us *UserService) GetUser(ctx context.Context, username string, password string) (*dto.UserDTO, *error.Error) {
+	user, err := us.userRepo.GetUserByUsernameAndPassword(ctx, username, password)
 	if (err != nil) {
 		return nil, err
 	}
@@ -51,6 +51,6 @@ func (us *UserService) CreateUser(ctx context.Context, dto dto.CreateUserDTO) *e
 }
 
 func (us *UserService) alreadyRegistered(ctx context.Context, dto dto.CreateUserDTO) bool {
-	user, _ := us.GetUser(ctx, dto.Username)
+	user, _ := us.userRepo.GetUserByUsername(ctx, dto.Username)
 	return user != nil 
 }

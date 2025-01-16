@@ -9,13 +9,36 @@ import (
 	"context"
 )
 
-const getUser = `-- name: GetUser :one
+const getUserByUsername = `-- name: GetUserByUsername :one
 SELECT id, first_name, last_name, username, hashed_password FROM users
 WHERE username = $1 LIMIT 1
 `
 
-func (q *Queries) GetUser(ctx context.Context, username string) (User, error) {
-	row := q.db.QueryRowContext(ctx, getUser, username)
+func (q *Queries) GetUserByUsername(ctx context.Context, username string) (User, error) {
+	row := q.db.QueryRowContext(ctx, getUserByUsername, username)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.FirstName,
+		&i.LastName,
+		&i.Username,
+		&i.HashedPassword,
+	)
+	return i, err
+}
+
+const getUserByUsernameAndPassword = `-- name: GetUserByUsernameAndPassword :one
+SELECT id, first_name, last_name, username, hashed_password FROM users
+WHERE username = $1 AND hashed_password = $2 LIMIT 1
+`
+
+type GetUserByUsernameAndPasswordParams struct {
+	Username       string
+	HashedPassword string
+}
+
+func (q *Queries) GetUserByUsernameAndPassword(ctx context.Context, arg GetUserByUsernameAndPasswordParams) (User, error) {
+	row := q.db.QueryRowContext(ctx, getUserByUsernameAndPassword, arg.Username, arg.HashedPassword)
 	var i User
 	err := row.Scan(
 		&i.ID,

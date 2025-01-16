@@ -16,8 +16,20 @@ func NewUserRepository(db *db.Queries) *UserRepository {
 	return &UserRepository{db: db}
 }
 
-func (ur *UserRepository) GetUser(ctx context.Context, username string) (*db.User, *error.Error) {
-	user, err := ur.db.GetUser(ctx, username)
+func (ur *UserRepository) GetUserByUsername(ctx context.Context, username string) (*db.User, *error.Error) {
+	user, err := ur.db.GetUserByUsername(ctx, username)
+	if err == nil {
+		return &user, nil
+	}
+
+	if err == sql.ErrNoRows {
+		return nil, error.NewError(404, "Usuario não encontrado")
+	}
+	return nil, error.NewError(500, "Erro interno")
+}
+
+func (ur *UserRepository) GetUserByUsernameAndPassword(ctx context.Context, username string, password string) (*db.User, *error.Error) {
+	user, err := ur.db.GetUserByUsernameAndPassword(ctx, db.GetUserByUsernameAndPasswordParams{Username: username, HashedPassword: password})
 	if err == nil {
 		return &user, nil
 	}
