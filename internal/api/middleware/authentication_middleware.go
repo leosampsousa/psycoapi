@@ -36,7 +36,7 @@ func (au *AuthenticationMiddleware) ValidateJWT() gin.HandlerFunc {
 
         claims, err := au.ts.VerifyToken(tokenString)
         if err != nil {
-            c.JSON(err.Code, err.Message)
+            c.JSON(err.Code, gin.H{"mensagem": err.Message})
             c.Abort()
             return
         }
