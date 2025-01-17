@@ -8,5 +8,4 @@ import (
 
 func UserRoute(router *gin.RouterGroup, uc *controller.UserController, md *middleware.AuthenticationMiddleware) {
 	router.GET("/user", uc.GetUser)
-	router.POST("/user", uc.Create)
 }

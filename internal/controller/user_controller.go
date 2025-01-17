@@ -32,7 +32,7 @@ func (uc *UserController) GetUser(c *gin.Context) {
 func (uc *UserController) Create(c *gin.Context) {
 	ctx := c.Request.Context()
 
-	var user dto.CreateUserDTO
+	var user dto.RegisterUserDTO
 	if errBind := c.BindJSON(&user); errBind != nil {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": "Erro ao fazer desserialização do Json"})
 		return

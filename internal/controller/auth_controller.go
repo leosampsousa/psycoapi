@@ -44,3 +44,20 @@ func (au *AuthController) Login(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, gin.H{"token" : token})
 }
 
+func (au *AuthController) Register(c *gin.Context) {
+	ctx := c.Request.Context()
+
+	var registerDto dto.RegisterUserDTO
+	if errBind := c.BindJSON(&registerDto); errBind != nil {
+		c.IndentedJSON(http.StatusBadRequest, "parâmetros inválidos")
+		return
+	}
+
+	err := au.us.CreateUser(ctx, registerDto)
+	if (err != nil) {
+		c.IndentedJSON(http.StatusUnauthorized, gin.H{"mensagem": err.Message})
+		return
+	}
+
+	c.Status(http.StatusCreated)
+}
