@@ -24,8 +24,8 @@ func (au *AuthController) Login(c *gin.Context) {
 	ctx := c.Request.Context()
 
 	var loginDto dto.LoginRequestDto
-	if errBind := c.BindJSON(&loginDto); errBind != nil {
-		c.IndentedJSON(http.StatusBadRequest, "parâmetros inválidos")
+	if errBind := c.BindJSON(&loginDto); errBind != nil || (loginDto.Username == "" || loginDto.Password == "") {
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"mensagem": "parâmetros inválidos"})
 		return
 	}
 
@@ -48,8 +48,8 @@ func (au *AuthController) Register(c *gin.Context) {
 	ctx := c.Request.Context()
 
 	var registerDto dto.RegisterUserDTO
-	if errBind := c.BindJSON(&registerDto); errBind != nil {
-		c.IndentedJSON(http.StatusBadRequest, "parâmetros inválidos")
+	if errBind := c.BindJSON(&registerDto); errBind != nil || (registerDto.FirstName == "" || registerDto.LastName == "" || registerDto.Password == "" || registerDto.Username == "") {
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"mensagem": "parâmetros inválidos"})
 		return
 	}
 
@@ -60,4 +60,26 @@ func (au *AuthController) Register(c *gin.Context) {
 	}
 
 	c.Status(http.StatusCreated)
+}
+
+func (au *AuthController) IsNewUsername(c *gin.Context) {
+	ctx := c.Request.Context()
+
+	var isNewUsernameDto dto.IsNewUsername
+
+	if errBind := c.BindJSON(&isNewUsernameDto); errBind != nil ||  isNewUsernameDto.Username == ""  {
+		c.IndentedJSON(http.StatusInternalServerError, gin.H{"mensagem": "parâmetros inválidos"})
+		return
+	}
+
+	print("nome: " + isNewUsernameDto.Username + "\n")
+
+	var isNewUsername = !au.us.AlreadyRegistered(ctx, isNewUsernameDto.Username)
+
+	if(!isNewUsername) {
+		c.IndentedJSON(http.StatusUnprocessableEntity, gin.H{"mensagem": "esse usuário já existe"})
+		return
+	}
+
+	c.Status(http.StatusOK)
 }

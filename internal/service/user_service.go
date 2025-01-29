@@ -38,7 +38,7 @@ func (us *UserService) GetUser(ctx context.Context, username string, password st
 
 func (us *UserService) CreateUser(ctx context.Context, dto dto.RegisterUserDTO) *error.Error {
 
-	if (us.alreadyRegistered(ctx, dto)) {
+	if (us.AlreadyRegistered(ctx, dto.Username)) {
 		return error.NewError(400, "Usuario ja cadastrado")
 	}
 
@@ -60,8 +60,8 @@ func (us *UserService) CreateUser(ctx context.Context, dto dto.RegisterUserDTO) 
 	return err
 }
 
-func (us *UserService) alreadyRegistered(ctx context.Context, dto dto.RegisterUserDTO) bool {
-	user, _ := us.userRepo.GetUserByUsername(ctx, dto.Username)
+func (us *UserService) AlreadyRegistered(ctx context.Context, username string) bool {
+	user, _ := us.userRepo.GetUserByUsername(ctx, username)
 	return user != nil 
 }
 
