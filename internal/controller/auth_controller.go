@@ -55,7 +55,7 @@ func (au *AuthController) Register(c *gin.Context) {
 
 	err := au.us.CreateUser(ctx, registerDto)
 	if (err != nil) {
-		c.IndentedJSON(http.StatusUnauthorized, gin.H{"mensagem": err.Message})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"mensagem": err.Message})
 		return
 	}
 
