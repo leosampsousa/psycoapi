@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/leosampsousa/psycoapi/internal/dto"
 	"github.com/leosampsousa/psycoapi/internal/service"
+	"github.com/leosampsousa/psycoapi/internal/validation"
 )
 
 type AuthController struct {
@@ -50,6 +51,12 @@ func (au *AuthController) Register(c *gin.Context) {
 	var registerDto dto.RegisterUserDTO
 	if errBind := c.BindJSON(&registerDto); errBind != nil || (registerDto.FirstName == "" || registerDto.LastName == "" || registerDto.Password == "" || registerDto.Username == "") {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"mensagem": "parâmetros inválidos"})
+		return
+	}
+
+	errInvalidLogin := validation.LoginValidation{}.IsValid(registerDto.Username, registerDto.Password);
+	if errInvalidLogin != nil {
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"mensagem": errInvalidLogin.Message})
 		return
 	}
 

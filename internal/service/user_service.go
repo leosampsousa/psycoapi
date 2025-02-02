@@ -37,7 +37,6 @@ func (us *UserService) GetUser(ctx context.Context, username string, password st
 }
 
 func (us *UserService) CreateUser(ctx context.Context, dto dto.RegisterUserDTO) *error.Error {
-
 	if (us.AlreadyRegistered(ctx, dto.Username)) {
 		return error.NewError(400, "Usuario ja cadastrado")
 	}
