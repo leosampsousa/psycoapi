@@ -9,6 +9,7 @@ import (
 	"github.com/leosampsousa/psycoapi/internal/db"
 	"github.com/leosampsousa/psycoapi/internal/repository"
 	"github.com/leosampsousa/psycoapi/internal/service"
+	"github.com/leosampsousa/psycoapi/internal/ws"
 )
 
 type Config struct {
@@ -32,15 +33,18 @@ func main () {
 
 	userRepository := repository.NewUserRepository(db)
 	userService := service.NewUserService(userRepository)
-	userController := controller.NewUserController(userService)
+	userController := controller.NewUserController(userService) 
 
 	authController := controller.NewAuthController(tokenService, userService)
+
+	wsManager := ws.NewManager()
 
 	appRouter := gin.Default()
 
 	publicRoutes := appRouter.Group("") 
 	{
 		router.AuthRoute(publicRoutes, authController)
+		router.WSRoute(publicRoutes, wsManager)
 	}
 
 	protectedRoutes := appRouter.Group("")
