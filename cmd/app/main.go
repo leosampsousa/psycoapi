@@ -44,13 +44,13 @@ func main () {
 	publicRoutes := appRouter.Group("") 
 	{
 		router.AuthRoute(publicRoutes, authController)
-		router.WSRoute(publicRoutes, wsManager)
 	}
 
 	protectedRoutes := appRouter.Group("")
 	protectedRoutes.Use(authMiddleware.ValidateJWT())					
 	{
-		router.UserRoute(protectedRoutes, userController, authMiddleware)
+		router.UserRoute(protectedRoutes, userController)
+		router.WSRoute(protectedRoutes, wsManager)
 	}
 
 	appRouter.Run(cfg.Host + ":" + cfg.Port)

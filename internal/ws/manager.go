@@ -1,6 +1,7 @@
 package ws
 
 import (
+	"encoding/json"
 	"errors"
 	"log"
 	"sync"
@@ -33,17 +34,24 @@ func NewManager() *Manager {
 }
 
 func (m *Manager) setupEventHandlers() {
-	m.handlers[EventSendMessage] = SendMessage
+	m.handlers[EventSendMessage] = SendMessageHandler
 }
 
-func SendMessage(event Event, c *Client) error {
-	log.Println(event)
+func SendMessageHandler(event Event, c *Client, m *Manager) error {
+	var message SendMessageEvent
+	if err := json.Unmarshal(event.Payload, &message); err != nil {
+		return errors.New("erro ao desserializar json")
+	}
+	if client, ok := m.clients[message.To]; ok {
+		client.messageChanel <- event
+	}
+
 	return nil
 }
 
 func (m *Manager) RouteEvent(event Event, c *Client) error {
 	if handler, ok := m.handlers[event.Type]; ok {
-		if err := handler(event, c); err != nil {
+		if err := handler(event, c, m); err != nil {
 			return err
 		}
 		return nil
@@ -59,26 +67,27 @@ func (m *Manager) ServeWS(c *gin.Context) {
 		log.Println(err)
 	}
 
-	client := NewClient(conn, m)
-	m.addClient(client)
+	username := c.MustGet("username").(string)
+	client := NewClient(username, conn, m)
+	m.addClient(username, client)
 
 	go client.ReadMessages()
 	go client.WriteMessages()
 }
 
-func (m *Manager) addClient(client *Client) {
+func (m *Manager) addClient(username string, client *Client) {
 	m.Lock()
 	defer m.Unlock()
 
-	m.clients[client] = true
+	m.clients[username] = client
 }
 
-func (m *Manager) removeClient(client *Client) {
+func (m *Manager) removeClient(username string) {
 	m.Lock()
 	defer m.Unlock()
 	
-	if _, ok := m.clients[client]; ok {
-		client.connection.Close()
-		delete(m.clients, client)
+	if _, ok := m.clients[username]; ok {
+		m.clients[username].connection.Close()
+		delete(m.clients, username)
 	}
 }

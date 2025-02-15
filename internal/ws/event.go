@@ -7,7 +7,7 @@ type Event struct {
 	Payload json.RawMessage `json:"payload"`
 }
 
-type EventHandler func(event Event, c *Client) error
+type EventHandler func(event Event, c *Client, m *Manager) error
 
 const (
 	EventSendMessage = "send_message"
@@ -16,4 +16,5 @@ const (
 type SendMessageEvent struct {
 	Message string `json:"message"`
 	From    string `json:"from"`
+	To 		string `json:"to"` 
 }

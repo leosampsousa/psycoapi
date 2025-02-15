@@ -13,16 +13,18 @@ var (
 	pingInterval = (pongWait * 9) / 10
 )
 
-type ClientList map[*Client]bool
+type ClientList map[string]*Client
 
 type Client struct {
+	username string
 	connection *websocket.Conn
 	manager *Manager
 	messageChanel chan Event
 }
 
-func NewClient(conn *websocket.Conn, manager *Manager) *Client {
+func NewClient(username string, conn *websocket.Conn, manager *Manager) *Client {
 	return &Client{
+		username: username,
 		connection: conn,
 		manager: manager,
 		messageChanel: make(chan Event),
@@ -32,7 +34,7 @@ func NewClient(conn *websocket.Conn, manager *Manager) *Client {
 func (c *Client) ReadMessages() {
 	defer func() {
 		//limpando conexão
-		c.manager.removeClient(c)
+		c.manager.removeClient(c.username)
 	}()
 
 	if err := c.connection.SetReadDeadline(time.Now().Add(pongWait)); err != nil {
@@ -68,7 +70,7 @@ func (c *Client) ReadMessages() {
 func (c *Client) WriteMessages() {
 	defer func() {
 		//limpando conexão
-		c.manager.removeClient(c)
+		c.manager.removeClient(c.username)
 	}()
 
 	ticker := time.NewTicker(pingInterval)
@@ -82,16 +84,14 @@ func (c *Client) WriteMessages() {
 				return
 			}
 
-			data, err := json.Marshal(message)
+			event, err := json.Marshal(message)
 			if err != nil {
-				log.Println(err)
-				return
-			}			
+				log.Println("erro ao serializar json")
+			}
 
-			if err := c.connection.WriteMessage(websocket.TextMessage, data); err != nil {
+			if err := c.connection.WriteMessage(websocket.TextMessage, event); err != nil {
 				log.Printf("failed to send message: %v", err)
 			}
-			log.Println("message sent")
 		
 		case <-ticker.C:
 			log.Println("ping")
