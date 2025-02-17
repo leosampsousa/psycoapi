@@ -10,10 +10,11 @@ import (
 
 type AuthenticationMiddleware struct {
 	ts *service.TokenService 
+    us *service.UserService
 }
 
-func NewAuthenticationMiddleware(ts *service.TokenService) *AuthenticationMiddleware {
-	return &AuthenticationMiddleware{ts: ts}
+func NewAuthenticationMiddleware(ts *service.TokenService, us *service.UserService) *AuthenticationMiddleware {
+	return &AuthenticationMiddleware{ts: ts, us:us}
 }
 
 func (au *AuthenticationMiddleware) ValidateJWT() gin.HandlerFunc {
@@ -41,7 +42,15 @@ func (au *AuthenticationMiddleware) ValidateJWT() gin.HandlerFunc {
             return
         }
 
+        loggedUser, errGetUser := au.us.GetUser(c.Request.Context(), claims["username"].(string))
+        if errGetUser != nil {
+            c.JSON(errGetUser.Code, gin.H{"mensagem": errGetUser.Message})
+            c.Abort()
+            return
+        }
+        
         c.Set("username", claims["username"])
+        c.Set("loggedUser", loggedUser)
         c.Next()
     }
 }

@@ -7,7 +7,182 @@ package db
 
 import (
 	"context"
+	"time"
 )
+
+const addFriend = `-- name: AddFriend :exec
+insert into user_friends(id_user, id_friend) values ($1, $2)
+`
+
+type AddFriendParams struct {
+	IDUser   int32
+	IDFriend int32
+}
+
+func (q *Queries) AddFriend(ctx context.Context, arg AddFriendParams) error {
+	_, err := q.db.ExecContext(ctx, addFriend, arg.IDUser, arg.IDFriend)
+	return err
+}
+
+const getAllChats = `-- name: GetAllChats :many
+with ultima_mensagem as (
+	select id, id_chat, sender, receiver, date_sent, content, 
+	row_number() over (partition by cm.id_chat order by cm.date_sent DESC) as row_number
+	from chat_messages cm 
+)
+select cp.id_chat, u.first_name, u.username, um.sender, um.content, um.date_sent 
+from chat_participants cp 
+inner join chat_participants cp2 on cp.id_chat = cp2.id_chat
+inner join users u on u.id = cp2.id_user 
+inner join ultima_mensagem um on um.id_chat = cp.id_chat
+where cp.id_user = $1 and cp2.id_user <> $1 and um.row_number = 1
+order by um.date_sent desc
+`
+
+type GetAllChatsRow struct {
+	IDChat    int32
+	FirstName string
+	Username  string
+	Sender    string
+	Content   string
+	DateSent  time.Time
+}
+
+func (q *Queries) GetAllChats(ctx context.Context, idUser int32) ([]GetAllChatsRow, error) {
+	rows, err := q.db.QueryContext(ctx, getAllChats, idUser)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetAllChatsRow
+	for rows.Next() {
+		var i GetAllChatsRow
+		if err := rows.Scan(
+			&i.IDChat,
+			&i.FirstName,
+			&i.Username,
+			&i.Sender,
+			&i.Content,
+			&i.DateSent,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getChatMessages = `-- name: GetChatMessages :many
+select sender, receiver, date_sent, content 
+from chat_messages cm 
+where cm.id_chat = $1
+order by date_sent desc
+`
+
+type GetChatMessagesRow struct {
+	Sender   string
+	Receiver string
+	DateSent time.Time
+	Content  string
+}
+
+func (q *Queries) GetChatMessages(ctx context.Context, idChat int32) ([]GetChatMessagesRow, error) {
+	rows, err := q.db.QueryContext(ctx, getChatMessages, idChat)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetChatMessagesRow
+	for rows.Next() {
+		var i GetChatMessagesRow
+		if err := rows.Scan(
+			&i.Sender,
+			&i.Receiver,
+			&i.DateSent,
+			&i.Content,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getChatParticipants = `-- name: GetChatParticipants :many
+select id_user
+from chat_participants cp 
+where cp.id_chat = $1
+`
+
+func (q *Queries) GetChatParticipants(ctx context.Context, idChat int32) ([]int32, error) {
+	rows, err := q.db.QueryContext(ctx, getChatParticipants, idChat)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []int32
+	for rows.Next() {
+		var id_user int32
+		if err := rows.Scan(&id_user); err != nil {
+			return nil, err
+		}
+		items = append(items, id_user)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getFriends = `-- name: GetFriends :many
+select (u.first_name || ' ' || u.last_name) as name, u.username as username
+from user_friends uf 
+inner join users u on u.id = uf.id_friend
+where uf.id_user = $1
+`
+
+type GetFriendsRow struct {
+	Name     interface{}
+	Username string
+}
+
+func (q *Queries) GetFriends(ctx context.Context, idUser int32) ([]GetFriendsRow, error) {
+	rows, err := q.db.QueryContext(ctx, getFriends, idUser)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetFriendsRow
+	for rows.Next() {
+		var i GetFriendsRow
+		if err := rows.Scan(&i.Name, &i.Username); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
 
 const getUserByUsername = `-- name: GetUserByUsername :one
 SELECT id, first_name, last_name, username, hashed_password FROM users

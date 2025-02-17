@@ -29,13 +29,19 @@ func main () {
 	defer connection.Close()
 
 	tokenService := service.NewTokenService(cfg.JwtSecret)
-	authMiddleware := middleware.NewAuthenticationMiddleware(tokenService)
+
 
 	userRepository := repository.NewUserRepository(db)
 	userService := service.NewUserService(userRepository)
-	userController := controller.NewUserController(userService) 
+	userController := controller.NewUserController(userService)
+	
+	chatRepository := repository.NewChatRepository(db)
+	chatService := service.NewChatService(chatRepository, userService)
+	chatController := controller.NewChatController(chatService)
 
 	authController := controller.NewAuthController(tokenService, userService)
+
+	authMiddleware := middleware.NewAuthenticationMiddleware(tokenService, userService)
 
 	wsManager := ws.NewManager()
 
@@ -51,6 +57,7 @@ func main () {
 	{
 		router.UserRoute(protectedRoutes, userController)
 		router.WSRoute(protectedRoutes, wsManager)
+		router.ChatRoute(protectedRoutes, chatController)
 	}
 
 	appRouter.Run(cfg.Host + ":" + cfg.Port)

@@ -30,7 +30,7 @@ func (au *AuthController) Login(c *gin.Context) {
 		return
 	}
 
-	user, err := au.us.GetUser(ctx, loginDto.Username, loginDto.Password)
+	user, err := au.us.Login(ctx, loginDto.Username, loginDto.Password)
 	if (err != nil) {
 		c.IndentedJSON(http.StatusUnauthorized, gin.H{"mensagem": "Usuário ou senha inválidos"})
 		return

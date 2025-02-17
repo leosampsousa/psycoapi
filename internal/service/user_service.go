@@ -18,7 +18,21 @@ func NewUserService(ur *repository.UserRepository) *UserService {
 	return &UserService{userRepo: ur}
 }
 
-func (us *UserService) GetUser(ctx context.Context, username string, password string) (*dto.UserDTO, *error.Error) {
+func (us *UserService) GetUser(ctx context.Context, username string) (*dto.UserDTO, *error.Error) {
+	user, err := us.userRepo.GetUserByUsername(ctx, username)
+	if (err != nil) {
+		return nil, err
+	}
+
+	return &dto.UserDTO{
+		ID: user.ID,
+		FirstName: user.FirstName,
+		LastName: user.LastName,
+		Username: user.Username,
+	}, nil
+}
+
+func (us *UserService) Login(ctx context.Context, username string, password string) (*dto.UserDTO, *error.Error) {
 	user, err := us.userRepo.GetUserByUsername(ctx, username)
 	if (err != nil) {
 		return nil, err
@@ -28,12 +42,7 @@ func (us *UserService) GetUser(ctx context.Context, username string, password st
 		return nil, error.NewError(500, "Usuário ou senha inválidas")
 	}
 
-	return &dto.UserDTO{
-		ID: user.ID,
-		FirstName: user.FirstName,
-		LastName: user.LastName,
-		Username: user.Username,
-	}, nil
+	return us.GetUser(ctx, username)
 }
 
 func (us *UserService) CreateUser(ctx context.Context, dto dto.RegisterUserDTO) *error.Error {
