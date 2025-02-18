@@ -150,13 +150,15 @@ func (q *Queries) GetChatParticipants(ctx context.Context, idChat int32) ([]int3
 }
 
 const getFriends = `-- name: GetFriends :many
-select (u.first_name || ' ' || u.last_name) as name, u.username as username
+select u.id as id, (u.first_name || ' ' || u.last_name) as name, u.username as username
 from user_friends uf 
 inner join users u on u.id = uf.id_friend
 where uf.id_user = $1
+order by name asc
 `
 
 type GetFriendsRow struct {
+	ID       int32
 	Name     interface{}
 	Username string
 }
@@ -170,7 +172,7 @@ func (q *Queries) GetFriends(ctx context.Context, idUser int32) ([]GetFriendsRow
 	var items []GetFriendsRow
 	for rows.Next() {
 		var i GetFriendsRow
-		if err := rows.Scan(&i.Name, &i.Username); err != nil {
+		if err := rows.Scan(&i.ID, &i.Name, &i.Username); err != nil {
 			return nil, err
 		}
 		items = append(items, i)

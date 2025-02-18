@@ -31,10 +31,11 @@ where cm.id_chat = $1
 order by date_sent desc;
 
 -- name: GetFriends :many
-select (u.first_name || ' ' || u.last_name) as name, u.username as username
+select u.id as id, (u.first_name || ' ' || u.last_name) as name, u.username as username
 from user_friends uf 
 inner join users u on u.id = uf.id_friend
-where uf.id_user = $1;
+where uf.id_user = $1
+order by name asc;
 
 -- name: AddFriend :exec
 insert into user_friends(id_user, id_friend) values ($1, $2);

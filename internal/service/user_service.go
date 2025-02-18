@@ -73,6 +73,36 @@ func (us *UserService) AlreadyRegistered(ctx context.Context, username string) b
 	return user != nil 
 }
 
+func (us *UserService) GetFriends(ctx context.Context, userId int32) (*[]db.GetFriendsRow, *error.Error) {
+	friends, err := us.userRepo.GetFriends(ctx, userId)
+	if(err != nil) {
+		return nil, error.NewError(err.Code, err.Message)
+	}
+
+	return friends, nil
+}
+
+func (us *UserService) AddFriend(ctx context.Context, userId int32, friendId int32) *error.Error {
+	friends, errFriends := us.userRepo.GetFriends(ctx, userId)
+
+	if errFriends != nil {
+		return errFriends
+	}
+
+	for _, friend := range *friends {
+		if friend.ID == friendId {
+			return nil
+		}
+	}
+
+	err := us.userRepo.AddFriend(ctx, userId, friendId)
+	if (err != nil) {
+		return err
+	}
+	
+	return nil
+}
+
 func (us *UserService) hashPassword(password string) (string, *error.Error) {
 	costFactor := 14
     bytes, err := bcrypt.GenerateFromPassword([]byte(password), costFactor)

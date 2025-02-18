@@ -6,5 +6,7 @@ import (
 )
 
 func UserRoute(router *gin.RouterGroup, uc *controller.UserController) {
-	router.GET("/user", uc.GetUser)
+	router.GET("/user/:username", uc.GetUser)
+	router.GET("/user/friends", uc.GetFriends)
+	router.POST("/user/friends/:friendId", uc.AddFriend)
 }
